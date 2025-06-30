@@ -22,6 +22,7 @@ Debe usar mensajes amigables y coherentes con un programa pensado para el encarg
 biblioteca. Bien escritos y redactados, puede ayudarse de Chat GPT para esto.
 '''
 
+# Lista de usuarios registrados, cada uno tiene nombre, apellido, rut y los libros que tiene prestados
 usuarios = [
     {"nombre": "Ana", "apellido": "González", "rut": "13816108-7", "libros": []},
     {"nombre": "Luis", "apellido": "Rodríguez", "rut": "13872719-2", "libros": []},
@@ -35,6 +36,7 @@ usuarios = [
     {"nombre": "Tomás", "apellido": "Silva", "rut": "10516040-5", "libros": []}
 ]
 
+# Lista de libros disponibles en la biblioteca
 libros = [
     {"id": 1, "titulo": "Cien años de soledad", "autor": "Gabriel García Márquez", "ISBN": "978-0307474728", "paginas": 432, "cantidad_disponible": 5},
     {"id": 2, "titulo": "1984", "autor": "George Orwell", "ISBN": "978-0451524935", "paginas": 328, "cantidad_disponible": 3},
@@ -48,173 +50,140 @@ libros = [
     {"id": 10, "titulo": "Pedro Páramo", "autor": "Juan Rulfo", "ISBN": "978-6073142360", "paginas": 144, "cantidad_disponible": 8}
 ]
 
-
-# ----------------------------
-# Función: buscar usuario por RUT
-# ----------------------------
-# Esta función recibe un RUT como texto y busca en la lista de usuarios si existe uno con ese RUT
-# Si lo encuentra, devuelve el diccionario con la información del usuario
-# Si no lo encuentra, devuelve None
-
+# Función que busca un usuario por su RUT
 def buscar_usuario(rut):
-    for usuario in usuarios:
-        if usuario["rut"] == rut:
-            return usuario
-    return None
+    for usuario in usuarios:  # Recorre la lista de usuarios
+        if usuario["rut"] == rut:  # Si el rut coincide
+            return usuario  # Devuelve el usuario encontrado
+    return None  # Si no se encuentra, retorna None (que no haag nada)
 
-# ----------------------------
-# Función: registrar un nuevo usuario
-# ----------------------------
-# Pide al encargado de la biblioteca que escriba los datos del nuevo usuario por consola
-# Valida que el RUT no esté repetido antes de agregarlo
-
+# Función que permite registrar un nuevo usuario en la lista
 def registrar_usuario():
     try:
-        print("\n--- Registro de nuevo usuario ---")
-        nombre = input("Ingrese el nombre: ")
-        apellido = input("Ingrese el apellido: ")
-        rut = input("Ingrese el RUT: ")
-
-        if buscar_usuario(rut):
-            print("El RUT ingresado ya está registrado en el sistema.")
+        nombre = input("Nombre del nuevo usuario: ")
+        apellido = input("Apellido: ")
+        rut = input("RUT: ")
+        if buscar_usuario(rut):           # Validar que el usuario no exista ya
+            print("Ya existe un usuario con ese RUT.")
             return
+        usuarios.append({"nombre": nombre, "apellido": apellido, "rut": rut, "libros": []}) # Agrega al nuevo usuario a la lista con libros vacíos
+        print("Usuario registrado correctamente.")
+    except:
+        print("Error al registrar el usuario.")
 
-        nuevo_usuario = {"nombre": nombre, "apellido": apellido, "rut": rut, "libros": []}
-        usuarios.append(nuevo_usuario)
-        print("Usuario registrado exitosamente.")
-    except Exception as e:
-        print("Ocurrió un error al registrar al usuario:", e)
-
-# ----------------------------
-# Función: registrar un nuevo libro
-# ----------------------------
-# Pide los datos de un libro y lo agrega a la lista
-# El ID se genera automáticamente sumando 1 al último ID registrado
-
+# Función que permite agregar un nuevo libro a la lista
 def registrar_libro():
     try:
-        print("\n--- Registro de nuevo libro ---")
         titulo = input("Título del libro: ")
         autor = input("Autor: ")
         isbn = input("ISBN: ")
-        paginas = int(input("Cantidad de páginas: "))  # Convertimos a número entero
-        cantidad = int(input("Cantidad disponible: "))  # Convertimos a número entero
+        paginas = int(input("Cantidad de páginas: "))
+        cantidad = int(input("Cantidad disponible: "))
+        nuevo_id = libros[-1]["id"] + 1  # Calcula el nuevo ID
+        libros.append({
+            "id": nuevo_id,                          #Agrega un id en base al ingresado por el usuario
+            "titulo": titulo,                        #Agrega un titulo en base al ingresado por el usuario
+            "autor": autor,                          #Agrega un autor en base al ingresado por el usuario
+            "ISBN": isbn,
+            "paginas": paginas,
+            "cantidad_disponible": cantidad
+        })
+        print("Libro agregado correctamente.")
+    except:
+        print("Error al registrar el libro, vuelva a intentar nuevamente")
 
-        nuevo_id = libros[-1]["id"] + 1  # Esta línea genera un nuevo ID para un libro, sumando 1 al ID del último libro en la lista
-        nuevo_libro = {"id": nuevo_id, "titulo": titulo, "autor": autor, "ISBN": isbn, "paginas": paginas, "cantidad_disponible": cantidad}
-        libros.append(nuevo_libro)
-        print("Libro registrado exitosamente.")
-    except Exception as e:
-        print("Error al registrar libro:", e)
-
-# ----------------------------
-# Función: prestar libro a un usuario
-# ----------------------------
-# Muestra la lista de libros disponibles y permite al encargado elegir uno por su ID
-# Si el libro está disponible (cantidad > 0), se le asigna al usuario
-
-def prestar_libro(usuario):
-    try:
-        print("\n--- Libros disponibles ---")
-        for libro in libros:
-            print(f"{libro['id']} - {libro['titulo']} ({libro['cantidad_disponible']} disponibles)")
-
-        id_libro = int(input("Ingrese el ID del libro que desea prestar: "))
-        libro = next((l for l in libros if l["id"] == id_libro), None)# Esta línea busca un libro específico dentro de la lista libros, comparando su "id" con el valor id_libro.
-        # Si lo encuentra, lo guarda en la variable libro.
-        # Si o lo encuentra, devuelve None (vacío).
-
-        if libro and libro["cantidad_disponible"] > 0:
-            usuario["libros"].append(id_libro)  # Agrega el ID del libro a la lista del usuario
-            libro["cantidad_disponible"] -= 1  # Resta uno a la cantidad disponible
-            print("El libro ha sido prestado exitosamente.")
-        else:
-            print("No hay ejemplares disponibles o el ID ingresado no existe.")
-    except Exception as e:
-        print("Error al prestar el libro:", e)
-
-# ----------------------------
-# Función: devolver libro
-# ----------------------------
-# Muestra los libros que el usuario tiene prestados y permite seleccionar uno para devolverlo
-# Si el libro no está registrado en la lista de libros, se da la opción de registrarlo
-
-def devolver_libro(usuario):
-    try:
-        if not usuario["libros"]:
-            print("El usuario no tiene libros para devolver.")
-            return
-
-        print("\n--- Libros prestados ---")
-        for i, id_libro in enumerate(usuario["libros"]):
-            libro = next((l for l in libros if l["id"] == id_libro), None)
-            if libro:
-                print(f"{i+1}. {libro['titulo']}")
-
-        seleccion = int(input("Ingrese el número del libro que desea devolver: ")) - 1
-        id_devuelto = usuario["libros"].pop(seleccion)
-        libro = next((l for l in libros if l["id"] == id_devuelto), None)
-
-        if libro:
-            libro["cantidad_disponible"] += 1
-            print("Libro devuelto correctamente.")
-        else:
-            print("Libro no encontrado. Registrando nuevo libro...")
-            registrar_libro()
-    except Exception as e:
-        print("Error al devolver el libro:", e)
-
-# ----------------------------
-# Función principal: Menú del sistema
-# ----------------------------
-# Muestra el menú principal del sistema y permite elegir qué acción realizar
-# Esta función se repite en un ciclo hasta que el usuario decida salir
-
-def menu():
+# Función que muestra las opciones para un usuario ya identificado
+def menu_usuario(usuario):
     while True:
-        print("\n=== MENÚ DEL SISTEMA DE BIBLIOTECA ===")
-        print("1. Buscar usuario por RUT")
-        print("2. Registrar nuevo usuario")
-        print("3. Registrar nuevo libro")
-        print("4. Salir")
-
-        opcion = input("Seleccione una opción: ")
+        print(f" Su Usuario es: {usuario['nombre']} {usuario['apellido']}")
+        print("1. Prestar libro")
+        print("2. Devolver libro")
+        print("3. Volver al menú principal")
+        opcion = input("Elija una opción: ")
 
         if opcion == "1":
-            rut = input("Ingrese el RUT del usuario: ")
-            usuario = buscar_usuario(rut)
+            try:
+                print("Lista de libros disponibles:")
+                for libro in libros:
+                    print(libro["id"], "-", libro["titulo"], "(", libro["cantidad_disponible"], "disponibles)")
 
-            if usuario:
-                print(f"Bienvenido/a {usuario['nombre']} {usuario['apellido']}")
-                print("1. Realizar préstamo")
-                print("2. Devolver libro")
-                sub_opcion = input("Seleccione una opción: ")
+                id_libro = int(input("Ingrese el número del libro que quiere prestar: "))
+            except:
+                id_libro = -1 #Se asigna un valor invalido
 
-                if sub_opcion == "1":
-                    prestar_libro(usuario)
-                elif sub_opcion == "2":
-                    devolver_libro(usuario)
+                # Buscamos el libro con ese ID
+                libro_encontrado = None
+                for l in libros:
+                    if l["id"] == id_libro:
+                        libro_encontrado = l
+                        break
+                if libro_encontrado and libro_encontrado["cantidad_disponible"] > 0: #Validamos que el libro este disponible y que exista
+                    usuario["libros"].append(id_libro)  # Se registra el préstamo
+                    libro_encontrado["cantidad_disponible"] -= 1  # Se reduce la cantidad disponible
+                    print("Libro prestado con éxito.")
+                elif id_libro == -1:
+                    print("Ocurrió un error al prestar el libro, intente nuevamente con valores validos")
                 else:
-                    print("Opción no válida.")
-            else:
-                print("Usuario no encontrado.")
-                if input("¿Desea registrarlo? (s/n): ").lower() == "s":
-                    registrar_usuario()
+                    print("No se encontró el libro o no hay disponibles.")
 
         elif opcion == "2":
-            registrar_usuario()
+            try:
+                if not usuario["libros"]:
+                    print("El usuario no tiene libros prestados.")
+                else:
+                    print("Libros prestados:", usuario["libros"])
+                    id_devolver = int(input("Ingrese el número del libro que desea devolver: "))
+
+                    if id_devolver in usuario["libros"]:
+                        usuario["libros"].remove(id_devolver)  # Se quita el libro de su lista
+                        libro_devuelto = None
+                        for l in libros:
+                            if l["id"] == id_devolver:
+                                l["cantidad_disponible"] += 1  # Se devuelve una unidad
+                                libro_devuelto = l
+                                break
+                        if libro_devuelto:
+                            print("Libro devuelto correctamente.")
+                        else:
+                            print("Ese libro no está registrado en la biblioteca, intente con un valor valido.")
+                            registrar = input("¿Desea registrar el libro que está devolviendo? (si/no): ")
+                            if registrar.lower() == "si":
+                                registrar_libro()
+                    else:
+                        print("Ese libro no está prestado por el usuario.")
+            except:
+                print("Error al devolver el libro, verifique los valores ingresados.")
 
         elif opcion == "3":
-            registrar_libro()
-
-        elif opcion == "4":
-            print("Gracias por utilizar el sistema. ¡Hasta pronto!")
-            break
-
+            break  # Sale del menú de usuario y comienza el programa nuevamente.
         else:
-            print("Opción inválida. Por favor, elija una opción del 1 al 4.")
+            print("Opción inválida.")
 
-# ----------------------------
-# Iniciar el sistema ejecutando el menú principal
-# ----------------------------
-menu()
+# Menú principal del programa
+while True:
+    print("Bienvenido al sistema de Biblioteca")
+    print("1. Buscar usuario por RUT")
+    print("2. Registrar nuevo usuario")
+    print("3. Registrar nuevo libro")
+    print("4. Salir")
+    opcion = input("Seleccione una opción: ")
+
+    if opcion == "1":
+        rut = input("Ingrese el RUT del usuario: ")
+        usuario = buscar_usuario(rut)
+        if usuario:
+            menu_usuario(usuario)
+        else:
+            print("Usuario no encontrado.")
+            agregar = input("¿Desea registrarlo? (s/n): ")
+            if agregar.lower() == "s":
+                registrar_usuario()
+    elif opcion == "2":
+        registrar_usuario()
+    elif opcion == "3":
+        registrar_libro()
+    elif opcion == "4":
+        print("Gracias por usar el sistema de biblioteca.")
+        break
+    else:
+        print("Opción no válida. Ingrese un número valido en base")
